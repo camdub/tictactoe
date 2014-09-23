@@ -48,14 +48,14 @@ app.config(function($stateProvider, $urlRouterProvider) {
     state('startGame', {
       url: '/game',
       templateUrl: 'partials/game.html',
-      controller: function($scope, $rootScope, game) {
-        $scope.title = 'hi';
+      controller: function($scope, $rootScope, game, Marker) {
+        $scope.isGameOver = game.gameOver;
         $scope.getSquareMarker = function(row, col) {
           var space = game.checkSpace(row, col);
           switch(space) {
-            case 1:
+            case Marker.X:
               return "fa fa-times";
-            case -1:
+            case Marker.O:
               return "fa fa-circle-o";
             case 0:
               return "";
@@ -68,86 +68,110 @@ app.config(function($stateProvider, $urlRouterProvider) {
       },
       onEnter: function($state, $rootScope) {
         // don't allow this route unless step one has happened
-        if($rootScope.ai === undefined) {
-          $state.go('choosePlayers');
-        }
-        // $rootScope.ai = true;
-        // $rootScope.playerFirst = false;
+        // if($rootScope.ai === undefined) {
+        //   $state.go('choosePlayers');
+        // }
+        $rootScope.ai = true;
+        $rootScope.playerFirst = false;
       }
     });
 });
 
-app.service('board', function() {
-  this.x = 1;
-  this.o = -1;
-  this.squares = [[0,0,0],[0,0,0],[0,0,0]];
+app.constant('Marker', { X: 1, O: 2});
+
+app.service('board', function(Marker) {
+  this.Xsquares = [[0,0,0],[0,0,0],[0,0,0]];
+  this.Osquares = [[0,0,0],[0,0,0],[0,0,0]];
+  this.winCases = [
+    [[1,1,1],[0,0,0],[0,0,0]],
+    [[0,0,0],[1,1,1],[0,0,0]],
+    [[0,0,0],[0,0,0],[1,1,1]],
+    [[1,0,0],[1,0,0],[1,0,0]],
+    [[0,1,0],[0,1,0],[0,1,0]],
+    [[0,0,1],[0,0,1],[0,0,1]],
+    [[1,0,0],[0,1,0],[0,0,1]],
+    [[0,0,1],[0,1,0],[1,0,0]]
+  ];
 
   this.isDraw = function() {
-    return this.squares.every(function(element) {
-      return element.every(function(el) { return el !== 0; })
-    });
+    var flattenX = [].concat.apply([], this.Xsquares);
+    var flattenO = [].concat.apply([], this.Osquares);
+
+    var draw = true;
+    for(var i = 0; i < flattenX.length; i++) {
+      draw = draw && (flattenX[i] === 1 || flattenO[i] === 1);
+    }
+    return draw;
+  };
+
+  this.checkSpace = function(row, col) {
+    var x = this.Xsquares[row][col];
+    var o = this.Osquares[row][col];
+
+    if(x === 1)
+      return Marker.X;
+    else if(o === 1)
+      return Marker.O;
+    else
+      return 0;
+  };
+
+  this.markSquare = function(row, col, player) {
+    if(player === Marker.X) {
+      this.Xsquares[row][col] = 1;
+    }
+    else {
+      this.Osquares[row][col] = 1;
+    }
   };
 
   this.checkWinner = function() {
-    var across, down, diag1, diag2, col, row;
-    across = down = col = row = 0;
-
-    // check across and down posibilities
-    for(row = 0; row < 3; row++) {
-      for(col = 0; col < 3; col++) {
-        var acrossVal = this.squares[row][col];
-        across += acrossVal;
+    for(var i = 0; i < this.winCases.length; i++) {
+      if(this.winCases[i].toString() === this.Xsquares.toString()) {
+        return Marker.X;
       }
-      if(across === 3 || down === 3 || diag1 == 3 || diag2 === 3) return this.x;
-      else if(across === -3 || down === -3 || diag1 === -3 || diag2 === -3) return this.o;
-    }
-    for(col = 0; col < 3; col++) {
-      for(row = 0; row < 3; row++) {
-        var downVal = this.squares[row][col];
-        down += downVal;
+      else if(this.winCases[i].toString() === this.Osquares.toString()) {
+        return Marker.O;
       }
-      if(across === 3 || down === 3 || diag1 == 3 || diag2 === 3) return this.x;
-      else if(across === -3 || down === -3 || diag1 === -3 || diag2 === -3) return this.o;
     }
-
-    // check diagonal
-    diag1 = this.squares[0][0] + this.squares[1][1] + this.squares[2][2];
-    diag2 = this.squares[0][2] + this.squares[1][1] + this.squares[2][0];
-
-    if(across === 3 || down === 3 || diag1 == 3 || diag2 === 3) return this.x;
-    else if(across === -3 || down === -3 || diag1 === -3 || diag2 === -3) return this.o;
-    return 0; // no winner on board
+    return 0;
   };
 });
 
-app.service('game', function(board, $rootScope) {
+app.service('game', function(board, Marker, $rootScope) {
   this.ai = $rootScope.ai;
   this.playerFirst = $rootScope.playerFirst;
-  this.current_player = 1;
-  this.game_over = false;
+  this.currentPlayer = Marker.X;
+  this.gameOver = false;
 
   this.checkSpace = function(row, col) {
-    return board.squares[row][col];
+    return board.checkSpace(row, col);
   };
 
   this.makeMove = function(row, col) {
-    if(board.squares[row][col] === 0) {
-      board.squares[row][col] = this.current_player;
+    if(board.checkSpace(row, col) === 0 && !this.gameOver) {
+      board.markSquare(row, col, this.currentPlayer);
       this.togglePlayer();
+
+      if(board.isDraw()) {
+        this.gameOver = true;
+        return "Draw!";
+      }
+      var winner = board.checkWinner();
+      if(winner !== 0) {
+        this.gameOver = true;
+        if(winner === Marker.X) {
+          return "X wins!";
+        }
+        else {
+          return "O wins!";
+        }
+      }
     }
-    var winner = board.checkWinner();
-    if(winner !== 0) {
-      if(winner === 1) return 'X wins';
-      if(winner === 0) return 'O wins';
-    }
-    else if(board.isDraw()) {
-      return 'draw';
-    }
-    return "";
   };
 
   this.togglePlayer = function() {
-    this.current_player = (this.current_player === 1) ? -1 : 1;
+    this.currentPlayer = (this.currentPlayer === Marker.X) ? Marker.O : Marker.X;
   };
 
 });
