@@ -62,70 +62,22 @@ app.config(function($stateProvider, $urlRouterProvider) {
 
 app.constant('Marker', { X: 1, O: 2});
 
-app.service('board', function(Marker) {
-  this.Xsquares = [[0,0,0],[0,0,0],[0,0,0]];
-  this.Osquares = [[0,0,0],[0,0,0],[0,0,0]];
-  this.winCases = [
-    [[1,1,1],[0,0,0],[0,0,0]],
-    [[0,0,0],[1,1,1],[0,0,0]],
-    [[0,0,0],[0,0,0],[1,1,1]],
-    [[1,0,0],[1,0,0],[1,0,0]],
-    [[0,1,0],[0,1,0],[0,1,0]],
-    [[0,0,1],[0,0,1],[0,0,1]],
-    [[1,0,0],[0,1,0],[0,0,1]],
-    [[0,0,1],[0,1,0],[1,0,0]]
-  ];
-
-  this.isDraw = function() {
-    var flattenX = [].concat.apply([], this.Xsquares);
-    var flattenO = [].concat.apply([], this.Osquares);
-
-    var draw = true;
-    for(var i = 0; i < flattenX.length; i++) {
-      draw = draw && (flattenX[i] === 1 || flattenO[i] === 1);
-    }
-    return draw;
-  };
-
-  this.checkSpace = function(row, col) {
-    var x = this.Xsquares[row][col];
-    var o = this.Osquares[row][col];
-
-    if(x === 1)
-      return Marker.X;
-    else if(o === 1)
-      return Marker.O;
-    else
-      return 0;
-  };
-
-  this.markSquare = function(row, col, player) {
-    if(player === Marker.X) {
-      this.Xsquares[row][col] = 1;
-    }
-    else {
-      this.Osquares[row][col] = 1;
-    }
-  };
-
-  this.checkWinner = function() {
-    for(var i = 0; i < this.winCases.length; i++) {
-      if(this.winCases[i].toString() === this.Xsquares.toString()) {
-        return Marker.X;
-      }
-      else if(this.winCases[i].toString() === this.Osquares.toString()) {
-        return Marker.O;
-      }
-    }
-    return 0;
-  };
-});
-
-app.controller('GameCtrl', function($scope, board, Marker, $rootScope) {
+app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $rootScope) {
   $scope.gameOver = false;
 
   this.currentPlayer = Marker.X;
   var _this = this;
+
+  $scope.reset = function(hard) {
+    board.reset();
+    this.currentPlayer = Marker.X;
+    $scope.gameOver = false;
+    $scope.message = "";
+
+    if(hard) {
+      $state.go('choosePlayers');
+    }
+  };
 
   $scope.getSquareMarker = function(row, col) {
     var space = board.checkSpace(row, col);
@@ -158,6 +110,9 @@ app.controller('GameCtrl', function($scope, board, Marker, $rootScope) {
           $scope.message = "O wins!";
         }
       }
+    }
+    if($rootScope.ai) {
+      var move = aiPlayer.getMove();
     }
   };
 
