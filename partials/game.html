@@ -1,0 +1,13 @@
+<div class="header">
+  <h1 class="text-center">Game Time</h1>
+  <span>{{message}}</span>
+</div>
+<div class="row">
+<div class="col-lg-8 col-lg-offset-2">
+  <div id="row" ng-repeat="row in [0,1,2]">
+    <div id="col" ng-repeat="col in [0,1,2]" ng-click="makeMove($parent.$index, $index)" data-row="{{$parent.$index}}" data-col="{{$index}}">
+      <span class="symbol"><i class="{{getSquareMarker($parent.$index, $index)}}"></i></span>
+    </div>
+  </div>
+</div>
+</div>
