@@ -48,24 +48,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
     state('startGame', {
       url: '/game',
       templateUrl: 'partials/game.html',
-      controller: function($scope, $rootScope, game, Marker) {
-        $scope.isGameOver = game.gameOver;
-        $scope.getSquareMarker = function(row, col) {
-          var space = game.checkSpace(row, col);
-          switch(space) {
-            case Marker.X:
-              return "fa fa-times";
-            case Marker.O:
-              return "fa fa-circle-o";
-            case 0:
-              return "";
-          }
-        };
-
-        $scope.makeMove = function(row, col) {
-          $scope.message = game.makeMove(row, col);
-        };
-      },
+      controller: 'GameCtrl',
       onEnter: function($state, $rootScope) {
         // don't allow this route unless step one has happened
         // if($rootScope.ai === undefined) {
@@ -138,33 +121,41 @@ app.service('board', function(Marker) {
   };
 });
 
-app.service('game', function(board, Marker, $rootScope) {
-  this.ai = $rootScope.ai;
-  this.playerFirst = $rootScope.playerFirst;
-  this.currentPlayer = Marker.X;
-  this.gameOver = false;
+app.controller('GameCtrl', function($scope, board, Marker, $rootScope) {
+  $scope.gameOver = false;
 
-  this.checkSpace = function(row, col) {
-    return board.checkSpace(row, col);
+  this.currentPlayer = Marker.X;
+  var _this = this;
+
+  $scope.getSquareMarker = function(row, col) {
+    var space = board.checkSpace(row, col);
+    switch(space) {
+      case Marker.X:
+        return "fa fa-times";
+      case Marker.O:
+        return "fa fa-circle-o";
+      case 0:
+        return "";
+    }
   };
 
-  this.makeMove = function(row, col) {
-    if(board.checkSpace(row, col) === 0 && !this.gameOver) {
-      board.markSquare(row, col, this.currentPlayer);
-      this.togglePlayer();
+  $scope.makeMove = function(row, col) {
+    if(board.checkSpace(row, col) === 0 && !$scope.gameOver) {
+      board.markSquare(row, col, _this.currentPlayer);
+      _this.togglePlayer();
 
       if(board.isDraw()) {
-        this.gameOver = true;
+        $scope.gameOver = true;
         return "Draw!";
       }
       var winner = board.checkWinner();
       if(winner !== 0) {
-        this.gameOver = true;
+        $scope.gameOver = true;
         if(winner === Marker.X) {
-          return "X wins!";
+          $scope.message = "X wins!";
         }
         else {
-          return "O wins!";
+          $scope.message = "O wins!";
         }
       }
     }
