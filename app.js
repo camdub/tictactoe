@@ -70,7 +70,7 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
 
   $scope.reset = function(hard) {
     board.reset();
-    this.currentPlayer = Marker.X;
+    _this.currentPlayer = Marker.X;
     $scope.gameOver = false;
     $scope.message = "";
 
@@ -96,11 +96,19 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
       board.markSquare(row, col, _this.currentPlayer);
       _this.togglePlayer();
 
+      var winner = board.checkWinner();
+
+      if(!board.isTerminal() && $rootScope.ai) {
+        var move = aiPlayer.getMove();
+        board.markSquare(move.row, move.col, _this.currentPlayer);
+        _this.togglePlayer();
+        winner = board.checkWinner();
+      }
+
       if(board.isDraw()) {
         $scope.gameOver = true;
-        return "Draw!";
+        $scope.message = "Draw!";
       }
-      var winner = board.checkWinner();
       if(winner !== 0) {
         $scope.gameOver = true;
         if(winner === Marker.X) {
@@ -110,9 +118,6 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
           $scope.message = "O wins!";
         }
       }
-    }
-    if($rootScope.ai) {
-      var move = aiPlayer.getMove();
     }
   };
 
