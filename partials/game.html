@@ -1,17 +1,18 @@
 <div class="header">
-  <h1 class="text-center">Game Time</h1>
-  <span>{{message}}</span>
-  <div ng-show="gameOver">
-    <a href="" ng-click="reset(false)">Play again?</a>
-    <a href="" ng-click="reset(true)">Start Over?</a>
-  </div>
+  &nbsp;<h1 class="text-center">{{message}}</h1>
 </div>
+
 <div class="row">
-<div class="col-lg-8 col-lg-offset-2">
-  <div id="row" ng-repeat="row in [0,1,2]">
-    <div id="col" ng-repeat="col in [0,1,2]" ng-click="makeMove($parent.$index, $index)" data-row="{{$parent.$index}}" data-col="{{$index}}">
-      <span class="symbol"><i class="{{getSquareMarker($parent.$index, $index)}}"></i></span>
+  <div class="col-lg-8 col-lg-offset-2">
+    <div id="row" ng-repeat="row in [0,1,2]">
+      <div id="col" ng-repeat="col in [0,1,2]" ng-click="makeMove($parent.$index, $index)">
+        <span class="symbol"><i class="{{getSquareMarker($parent.$index, $index)}}"></i></span>
+      </div>
     </div>
   </div>
 </div>
+
+<div class="row button-group" ng-show="gameOver">
+  <button class="btn btn-default" ng-click="reset(false)">Rematch</button>
+  <button class="btn btn-default" ng-click="reset(true)">New Game</button>
 </div>

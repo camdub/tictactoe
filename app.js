@@ -1,48 +1,26 @@
 'use strict';
 
 var app = angular.module('TTTApp', ['ui.router']);
+app.constant('Marker', { X: 1, O: 2});
 
 app.config(function($stateProvider, $urlRouterProvider) {
   /*
-    Provide a state for each setup step to allow them to be added to history
-    and accessed via the back button
+    Provide a state for setup step to allow it to be ccessed via the back button
   */
-  $urlRouterProvider.otherwise("/setup/1");
+  $urlRouterProvider.otherwise("/setup");
   $stateProvider.
     state('choosePlayers', {
-      url: '/setup/1',
+      url: '/setup',
       templateUrl: '/partials/setup.html',
       controller: function($scope, $rootScope, $state) {
         $scope.title = 'Who Plays?';
-        $rootScope.ai = false;
 
         $scope.choosePlayers = function(num) {
-          if(num === 2) {
-            $state.go('startGame');
-          }
-          else {
+          if(num === 1) {
             $rootScope.ai = true;
-            $state.go('firstPlayer');
           }
-        };
-      }
-    }).
-    state('firstPlayer', {
-      url: '/setup/2',
-      templateUrl: '/partials/setup.html',
-      controller: function($scope, $rootScope, $state) {
-        $scope.title = 'Who is first?';
-
-        $scope.playerFirst = function(player) {
-          $rootScope.playerFirst = player;
           $state.go('startGame');
-        }
-      },
-      onEnter: function($state, $rootScope) {
-        // don't allow this route unless step one has happened
-        if($rootScope.ai === undefined) {
-          $state.go('choosePlayers');
-        }
+        };
       }
     }).
     state('startGame', {
@@ -51,16 +29,12 @@ app.config(function($stateProvider, $urlRouterProvider) {
       controller: 'GameCtrl',
       onEnter: function($state, $rootScope) {
         // don't allow this route unless step one has happened
-        // if($rootScope.ai === undefined) {
-        //   $state.go('choosePlayers');
-        // }
-        $rootScope.ai = true;
-        $rootScope.playerFirst = false;
+        if($rootScope.ai === undefined) {
+          $state.go('choosePlayers');
+        }
       }
     });
 });
-
-app.constant('Marker', { X: 1, O: 2});
 
 app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $rootScope) {
   $scope.gameOver = false;
@@ -92,24 +66,28 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
   };
 
   $scope.makeMove = function(row, col) {
-    if(board.checkSpace(row, col) === 0 && !$scope.gameOver) {
+    if(board.checkSpace(row, col) === 0 && !$scope.gameOver
+      && _this.currentPlayer === Marker.X) {
+
       board.markSquare(row, col, _this.currentPlayer);
       _this.togglePlayer();
 
+      var isDraw = board.isDraw();
       var winner = board.checkWinner();
 
-      if(!board.isTerminal() && $rootScope.ai) {
+      if(!(isDraw || winner !== 0) && $rootScope.ai) {
         var move = aiPlayer.getMove();
         board.markSquare(move.row, move.col, _this.currentPlayer);
         _this.togglePlayer();
+        isDraw = board.isDraw();
         winner = board.checkWinner();
       }
 
-      if(board.isDraw()) {
+      if(isDraw) {
         $scope.gameOver = true;
         $scope.message = "Draw!";
       }
-      if(winner !== 0) {
+      else if(winner) {
         $scope.gameOver = true;
         if(winner === Marker.X) {
           $scope.message = "X wins!";

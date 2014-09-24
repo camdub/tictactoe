@@ -9,13 +9,12 @@ app.service('aiPlayer', function(Marker, board) {
       oMarks = angular.copy(board.Osquares);
 
       var score = this.getScore(move, xMarks, oMarks, false, 0, Marker.O);
-      console.log("row: " + move.row + ", col: " + move.col + " - " + score);
       if(score > bestScore) {
         bestScore = score;
         bestMove = move;
       }
+
     }, this);
-    console.log(bestMove);
     return bestMove;
   };
 
@@ -42,6 +41,7 @@ app.service('aiPlayer', function(Marker, board) {
         var bestScore = -100, i;
         for(i = 0; i < legalMoves.length; i++) {
           bestScore = Math.max(bestScore, this.getScore(legalMoves[i], angular.copy(xMarks), angular.copy(oMarks), false, depth+1, player));
+          if(bestScore == 100) break;
         }
         return bestScore;
       }
@@ -49,6 +49,7 @@ app.service('aiPlayer', function(Marker, board) {
         var worstScore = 100;
         for(i = 0; i < legalMoves.length; i++) {
           worstScore = Math.min(worstScore, this.getScore(legalMoves[i], angular.copy(xMarks), angular.copy(oMarks), true, depth+1, player));
+          if(worstScore == -100) break;
         }
         return worstScore;
       }

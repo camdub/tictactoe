@@ -47,10 +47,6 @@ app.service('board', function(Marker) {
     }
   };
 
-  this.isTerminal = function() {
-    return this.isDraw() || this.checkWinner() !== 0;
-  };
-
   this.getLegalMoves = function(xMarks, oMarks) {
     var moves = [];
     xMarks = xMarks || this.Xsquares;

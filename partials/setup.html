@@ -1,25 +1,14 @@
 <div class="header">
   <h1 class="text-center">{{title}}</h1>
 </div>
-<div class="row" ng-switch on="ai">
-  <div class="player" ng-switch-when="false">
+<div class="row">
+  <div class="player">
     <div class="col-sm-push-1 col-sm-pull-1 col-md-5 choice" ng-click="choosePlayers(1)">
       <p class="large-number"><i class="fa fa-laptop"></i> <i class="fa fa-user"></i></p>
     </div>
     <div class="col-sm-push-1 col-md-5 choice" ng-click="choosePlayers(2)">
       <p class="large-number">
         <i class="fa fa-user"></i> <i class="fa fa-user"></i>
-      </p>
-    </div>
-  </div>
-
-  <div class="order" ng-switch-when="true">
-    <div class="col-sm-push-1 col-sm-pull-1 col-md-5 choice" ng-click="playerFirst(false)">
-      <p class="large-number"><i class="fa fa-laptop"></i></p>
-    </div>
-    <div class="col-sm-push-1 col-md-5 choice" ng-click="playerFirst(true)">
-      <p class="large-number">
-        <i class="fa fa-user"></i>
       </p>
     </div>
   </div>
