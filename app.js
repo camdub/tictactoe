@@ -16,9 +16,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
         $scope.title = 'Who Plays?';
 
         $scope.choosePlayers = function(num) {
-          if(num === 1) {
-            $rootScope.ai = true;
-          }
+          $rootScope.ai = num === 1 ? true : false;
           $state.go('startGame');
         };
       }
@@ -68,11 +66,11 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
 
   this.togglePlayer = function() {
     this.currentPlayer = (this.currentPlayer === Marker.X) ? Marker.O : Marker.X;
+    console.log(this.currentPlayer);
   };
 
   $scope.makeMove = function(row, col) {
-    if(board.checkSpace(row, col) === 0 && !$scope.gameOver
-      && _this.currentPlayer === Marker.X) {
+    if(board.checkSpace(row, col) === 0 && !$scope.gameOver) {
 
       board.markSquare(row, col, _this.currentPlayer);
       _this.togglePlayer();
