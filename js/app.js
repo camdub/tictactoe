@@ -66,7 +66,6 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
 
   this.togglePlayer = function() {
     this.currentPlayer = (this.currentPlayer === Marker.X) ? Marker.O : Marker.X;
-    console.log(this.currentPlayer);
   };
 
   $scope.makeMove = function(row, col) {
