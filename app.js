@@ -29,9 +29,10 @@ app.config(function($stateProvider, $urlRouterProvider) {
       controller: 'GameCtrl',
       onEnter: function($state, $rootScope) {
         // don't allow this route unless step one has happened
-        if($rootScope.ai === undefined) {
-          $state.go('choosePlayers');
-        }
+        // if($rootScope.ai === undefined) {
+        //   $state.go('choosePlayers');
+        // }
+        $rootScope.ai = true;
       }
     });
 });
@@ -45,6 +46,7 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
   $scope.reset = function(hard) {
     board.reset();
     _this.currentPlayer = Marker.X;
+    aiPlayer.reset();
     $scope.gameOver = false;
     $scope.message = "";
 
@@ -65,6 +67,41 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
     }
   };
 
+  this.togglePlayer = function() {
+    this.currentPlayer = (this.currentPlayer === Marker.X) ? Marker.O : Marker.X;
+  };
+
+  this.runTest = function() {
+    for(var i = 0; i < 50; i++) {
+      console.time('cpuTest');
+      this.cpuTest();
+      console.timeEnd('cpuTest');
+      $scope.reset(false);
+    }
+  };
+
+  this.cpuTest = function() {
+    // simulate human move
+    var moves = board.getLegalMoves();
+    var rand = Math.floor(Math.random() * moves.length);
+    var randMove = moves[rand];
+
+    board.markSquare(randMove.row, randMove.col, _this.currentPlayer);
+    _this.togglePlayer();
+
+    // use minimax to choose ALL remaining moves
+    while(board.getLegalMoves().length > 0) {
+      var move = aiPlayer.getMove(_this.currentPlayer);
+      board.markSquare(move.row, move.col, _this.currentPlayer);
+      _this.togglePlayer();
+    }
+    if(board.checkWinner() === 0)
+      console.log("Draw");
+    else
+      console.log("Winner: " + board.checkWinner());
+  };
+  this.runTest();
+
   $scope.makeMove = function(row, col) {
     if(board.checkSpace(row, col) === 0 && !$scope.gameOver
       && _this.currentPlayer === Marker.X) {
@@ -76,7 +113,10 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
       var winner = board.checkWinner();
 
       if(!(isDraw || winner !== 0) && $rootScope.ai) {
-        var move = aiPlayer.getMove();
+        console.time('getMove');
+        var move = aiPlayer.getMove(_this.currentPlayer);
+        console.timeEnd('getMove');
+        _this.firstMove = false;
         board.markSquare(move.row, move.col, _this.currentPlayer);
         _this.togglePlayer();
         isDraw = board.isDraw();
@@ -99,8 +139,5 @@ app.controller('GameCtrl', function($scope, $state, aiPlayer, board, Marker, $ro
     }
   };
 
-  this.togglePlayer = function() {
-    this.currentPlayer = (this.currentPlayer === Marker.X) ? Marker.O : Marker.X;
-  };
 
 });

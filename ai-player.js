@@ -1,14 +1,25 @@
 app.service('aiPlayer', function(Marker, board) {
-  this.getMove = function() {
+  this.firstMove = true;
+
+  this.reset = function() {
+    this.firstMove = true;
+  };
+
+  this.getMove = function(player) {
     var bestScore = -100, bestMove = {};
     var legalMoves = board.getLegalMoves();
     var xMarks, oMarks;
+
+    if(this.firstMove) {
+      this.firstMove = false;
+      return this.getFirstMove([].concat.apply([], board.Xsquares).join(''));
+    }
 
     legalMoves.forEach(function(move) {
       xMarks = angular.copy(board.Xsquares);
       oMarks = angular.copy(board.Osquares);
 
-      var score = this.getScore(move, xMarks, oMarks, false, 0, Marker.O);
+      var score = this.getScore(move, xMarks, oMarks, false, 0, player);
       if(score > bestScore) {
         bestScore = score;
         bestMove = move;
@@ -16,6 +27,29 @@ app.service('aiPlayer', function(Marker, board) {
 
     }, this);
     return bestMove;
+  };
+
+  /*
+    There is a 3s delay finding the first move. This might be an issue
+    with Angualar? Caching optimal first moves to remove this delay
+  */
+  this.getFirstMove = function(opponent) {
+    if(opponent === "100000000" || opponent === "001000000"
+      || opponent === "000000100" || opponent === "000000001") {
+
+      return { row: 1, col: 1 };
+    }
+    else if(opponent === "010000000" || opponent === "000100000"
+      || opponent === "000010000") {
+
+      return { row: 0, col: 0};
+    }
+    else if(opponent === "000001000") {
+      return { row: 0, col: 2 };
+    }
+    else if (opponent === "000000010") {
+      return { row: 0, col: 1 };
+    }
   };
 
   this.getScore = function(move, xMarks, oMarks, isMax, depth, player) {
